@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
-
-import logo from "./logo.svg";
+import React, { useState, useRef } from "react";
 import "./App.css";
 
 function App() {
   const [uploadedImg, setUploadedImg] = useState(null);
+  const fileInputRef = useRef(null);
 
   // creates an object url for the image
   const handlePaste = (e) => {
@@ -51,11 +50,45 @@ function App() {
     }
   };
 
+  // a third method which allows a user to upload an image directly (e.g. for mobile web)
+  const handleUpload = (e) => {
+    const items = e.target.files;
+    for (let item of items) {
+      if (item.type.startsWith("image/")) {
+        console.log("image data", item);
+        const reader = new FileReader();
+        // tell it to set image after loading stuff
+        reader.onloadend = () => {
+          console.log("img data url", reader.result);
+          setUploadedImg(reader.result);
+        };
+        reader.readAsDataURL(item);
+        break;
+      }
+    }
+  };
+
+  // need a button to trigger the uploader
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
   const renderPlaceholder = () => {
     return (
       <div className="relative" onDrop={handleDrop} onDragOver={blockDragOver}>
-        <div className="absolute w-full h-full flex justify-center flex-wrap content-center">
-          <p>Drag and Drop Image Here</p>
+        <div className="absolute w-full h-full flex flex-col justify-center flex-wrap content-center">
+          <div>
+            <button onClick={handleButtonClick}>
+              Drag, paste or upload image
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleUpload}
+            />
+          </div>
         </div>
         <svg
           className="h-64 w-full rounded border-2 border-dashed border-gray-300 bg-white text-gray-200"
@@ -78,7 +111,7 @@ function App() {
   const renderImg = () => {
     return (
       <div className="relative">
-        <img src={uploadedImg} alt="Uploaded Image" />
+        <img src={uploadedImg} alt="Uploaded" />
       </div>
     );
   };
